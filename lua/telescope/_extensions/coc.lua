@@ -358,8 +358,6 @@ local references = function(opts)
   local displayer = entry_display.create({
     separator = '▏',
     items = {
-      { width = 6 },
-      { width = 40 },
       { remaining = true },
     },
   })
@@ -369,9 +367,7 @@ local references = function(opts)
     local filename = utils.transform_path(opts, entry.filename)
 
     return displayer({
-      line_info,
       filename,
-      entry.text:gsub('.* | ', ''),
     })
   end
 
