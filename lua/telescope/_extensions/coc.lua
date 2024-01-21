@@ -35,7 +35,7 @@ local function is_ready(feature)
   return true
 end
 
-local locations_to_items = function(locs)
+local locations_to_items = function(locs, opts)
   if not locs then
     return
   end
@@ -58,6 +58,12 @@ local locations_to_items = function(locs)
     end
 
     local filename = vim.uri_to_fname(l.uri)
+    if opts.filter_tests and filename:find('test') then
+      goto continue
+    end
+    if opts.grep and not line:find(opts.grep) then
+      goto continue
+    end
     local row = l.range.start.line
     items[#items + 1] = {
       filename = filename,
@@ -65,6 +71,7 @@ local locations_to_items = function(locs)
       col = l.range.start.character + 1,
       text = line,
     }
+    ::continue::
   end
 
   return items
@@ -285,7 +292,7 @@ local function list_or_jump(opts)
   elseif #defs == 1 and not config.prefer_locations then
     CocActionAsync('runCommand', 'workspace.openLocation', nil, defs[1])
   else
-    local results = locations_to_items(defs)
+    local results = locations_to_items(defs, opts)
     if not results then
       return
     end
@@ -343,7 +350,7 @@ local references = function(opts)
     return
   end
 
-  local results = locations_to_items(refs)
+  local results = locations_to_items(refs, opts)
   if not results then
     return
   end
@@ -397,12 +404,19 @@ local references_used = function(opts)
   references(opts)
 end
 
+local references_used_on_request = function(opts)
+  opts.excludeDeclaration = true
+  opts.filter_tests = true
+  opts.grep = 'onRequest'
+  references(opts)
+end
+
 local locations = function(opts)
   if config.theme then
     opts = vim.tbl_deep_extend("force", opts or {}, config.theme)
   end
   local refs = vim.g.coc_jump_locations
-  local results = locations_to_items(refs)
+  local results = locations_to_items(refs, opts)
   if not results then
     return
   end
@@ -695,6 +709,7 @@ return require('telescope').register_extension({
     locations = locations,
     references = references,
     references_used = references_used,
+    request = references_used_on_request,
     diagnostics = diagnostics,
     definitions = definitions,
     declarations = declarations,
