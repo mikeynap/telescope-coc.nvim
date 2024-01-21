@@ -407,6 +407,13 @@ local references_used_on_request = function(opts)
   references(opts)
 end
 
+local references_used_on_message = function(opts)
+  opts.excludeDeclaration = true
+  opts.filter_tests = true
+  opts.grep = 'onMessage'
+  references(opts)
+end
+
 local locations = function(opts)
   if config.theme then
     opts = vim.tbl_deep_extend("force", opts or {}, config.theme)
@@ -706,6 +713,7 @@ return require('telescope').register_extension({
     references = references,
     references_used = references_used,
     request = references_used_on_request,
+    onMessage = references_used_on_message,
     diagnostics = diagnostics,
     definitions = definitions,
     declarations = declarations,
